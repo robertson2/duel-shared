@@ -48,7 +48,7 @@ Complete advocacy marketing analytics platform with:
 
 **Windows:**
 ```powershell
-git clone https://github.com/robertson2/duel-shared/
+git clone <repository-url>
 cd Duel
 py -3.13 -m venv venv
 venv\Scripts\activate
@@ -74,13 +74,17 @@ psql -d advocacy_platform -f schema/schema.sql
 cd frontend && npm install && cd ..
 ```
 
-**Data Input:**
+**Data Import**
 
 The platform supports three methods for importing data:
 
 1. **File System Import**: Place JSON files in the `data/` directory, then run the `run-etl.bat` script to process them.
 2. **Web Interface Upload**: Upload files via the web interface at `/imports`, then trigger the ETL process manually. Supports multiple archive formats: `.json`, `.zip`, `.tar`, `.gz`, `.tar.gz`, `.tgz`, `.rar` (automatically extracted).
 3. **Direct API Upload**: Send files directly via REST API using `POST /api/v1/upload`.
+
+**Data Delete**
+
+All data can be deleted from the platfrom via the 'Clear All Database Data' button on the /imports page.
 
 ## 💻 Commands
 
