@@ -16,7 +16,7 @@ if not exist "backend\etl\pipeline.py" (
     exit /b 1
 )
 
-echo [1/2] Checking Python virtual environment...
+echo [1/3] Checking Python virtual environment...
 if not exist "venv\Scripts\python.exe" (
     echo ERROR: Virtual environment not found!
     echo Please create a virtual environment first:
@@ -29,7 +29,7 @@ if not exist "venv\Scripts\python.exe" (
 echo Virtual environment found!
 
 echo.
-echo [2/2] Running ETL Pipeline...
+echo [2/3] Running ETL Pipeline...
 echo.
 
 REM Run ETL pipeline
@@ -46,6 +46,14 @@ if errorlevel 1 (
     echo ========================================
     echo ETL Pipeline COMPLETED
     echo ========================================
+    echo.
+    echo [3/3] Cleaning JSON files from data folder...
+    if exist "data\*.json" (
+        del /q "data\*.json"
+        echo JSON files cleaned successfully!
+    ) else (
+        echo No JSON files found in data folder.
+    )
 )
 
 echo.
