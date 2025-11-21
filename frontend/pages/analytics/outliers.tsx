@@ -6,14 +6,16 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { AlertTriangle, TrendingUp, TrendingDown, Zap, AlertCircle, Info, Settings, Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download } from 'lucide-react';
-import { apiClient } from '@/lib/api';
+import { apiClient, parseSales } from '@/lib/api';
 import { useOutlierSettings } from '@/hooks/useOutlierSettings';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const DEFAULT_PAGE_SIZE = 25;
 
 export default function OutliersPage() {
   const [outlierType, setOutlierType] = useState<'sales' | 'engagement' | 'efficient'>('sales');
   const { settings, isLoaded } = useOutlierSettings();
+  const { formatCurrency } = useCurrency();
 
   // Pagination state for each tab
   const [salesPage, setSalesPage] = useState(1);
@@ -696,10 +698,10 @@ export default function OutliersPage() {
                                 {getOutlierBadge(outlier.outlier_type)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                                ${typeof outlier.amount === 'string' ? parseFloat(outlier.amount).toLocaleString() : outlier.amount.toLocaleString()}
+                                {formatCurrency(typeof outlier.amount === 'string' ? parseFloat(outlier.amount) : outlier.amount, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
-                                ${outlier.avg_sale?.toFixed(2) || '0.00'}
+                                {formatCurrency(outlier.avg_sale || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
                                 {outlier.z_score?.toFixed(2)}
@@ -1196,9 +1198,7 @@ export default function OutliersPage() {
                                 )}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                                ${typeof converter.total_sales === 'string' 
-                                  ? parseFloat(converter.total_sales).toLocaleString() 
-                                  : converter.total_sales.toLocaleString()}
+                                {formatCurrency(parseSales(converter.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                                 {converter.total_engagement_score?.toLocaleString() || 0}

@@ -371,7 +371,7 @@ export default function SegmentsPage() {
                         <div className="mt-1 text-sm text-gray-500">accounts</div>
                         {tierData && (
                           <div className="mt-3 text-xs text-gray-600 space-y-1">
-                            <div>Avg Sales: {formatCurrency(tierData.avg_sales || 0, { minimumFractionDigits: 0 })}</div>
+                            <div>Avg Sales: {formatCurrency(tierData.avg_sales || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             <div>{tierData.pct_of_total_sales?.toFixed(1) || 0}% of revenue</div>
                           </div>
                         )}
@@ -451,10 +451,10 @@ export default function SegmentsPage() {
                               {tier.avg_engagement?.toLocaleString() || 0}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                              {formatCurrency(tier.avg_sales || 0, { minimumFractionDigits: 0 })}
+                              {formatCurrency(tier.avg_sales || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-700">
-                              {formatCurrency(tier.total_tier_sales || 0, { minimumFractionDigits: 0 })}
+                              {formatCurrency(tier.total_tier_sales || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                               {tier.pct_of_total_sales ? Math.round(tier.pct_of_total_sales) : 0}%
@@ -744,7 +744,7 @@ export default function SegmentsPage() {
                             {segment.total_engagement_score?.toLocaleString() || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                            {formatCurrency(parseSales(segment.total_sales), { minimumFractionDigits: 0 })}
+                            {formatCurrency(parseSales(segment.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
                       ))}
@@ -1021,7 +1021,7 @@ export default function SegmentsPage() {
                             {segment.avg_efficiency?.toFixed(4) || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                            {formatCurrency(segment.avg_sales || 0, { minimumFractionDigits: 0 })}
+                            {formatCurrency(segment.avg_sales || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                             {segment.avg_engagement?.toLocaleString() || 0}

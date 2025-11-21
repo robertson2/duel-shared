@@ -724,9 +724,7 @@ export default function PlatformFitPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
                             <div className="flex items-center justify-end">
                               <DollarSign className="w-4 h-4 mr-1" />
-                              {typeof item.total_sales === 'string'
-                                ? parseFloat(item.total_sales).toLocaleString()
-                                : item.total_sales.toLocaleString()}
+                              {formatCurrency(typeof item.total_sales === 'string' ? parseFloat(item.total_sales) : item.total_sales, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">

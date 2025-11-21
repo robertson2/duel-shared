@@ -443,7 +443,7 @@ export default function BrandsPage() {
                                 <PerformanceBadge tier={tier} size="sm" />
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                                {formatCurrency(sales, { minimumFractionDigits: 0 })}
+                                {formatCurrency(sales, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
                                 {brand.total_advocates}
@@ -452,7 +452,7 @@ export default function BrandsPage() {
                                 {brand.total_programs}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                                {formatCurrency(Number(brand.sales_per_advocate || 0), { minimumFractionDigits: 0 })}
+                                {formatCurrency(Number(brand.sales_per_advocate || 0), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </td>
                             </tr>
                           );

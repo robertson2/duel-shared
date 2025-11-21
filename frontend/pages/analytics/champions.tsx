@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import useSWR from 'swr';
-import { apiClient } from '@/lib/api';
+import { apiClient, parseSales } from '@/lib/api';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Trophy, DollarSign, TrendingUp, Target, Settings } from 'lucide-react';
 import { useChampionSettings } from '@/hooks/useChampionSettings';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 type ChampionType = 'overall' | 'sales' | 'engagement' | 'balanced';
 
 export default function ChampionsPage() {
   const [championType, setChampionType] = useState<ChampionType>('overall');
   const { settings, isLoaded } = useChampionSettings();
+  const { formatCurrency } = useCurrency();
 
   // Build settings params based on champion type
   const getSettingsParams = () => {
@@ -453,11 +455,11 @@ export default function ChampionsPage() {
                           {champion.total_engagement_score?.toLocaleString() || 0}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-green-600">
-                          ${champion.total_sales?.toLocaleString() || 0}
+                          {formatCurrency(parseSales(champion.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         {championType === 'sales' && (
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                            ${champion.sales_per_program?.toLocaleString() || 0}
+                            {formatCurrency(champion.sales_per_program || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         )}
                         {championType === 'engagement' && (

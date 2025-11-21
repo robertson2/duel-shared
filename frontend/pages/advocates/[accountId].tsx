@@ -499,7 +499,7 @@ export default function AdvocateDetailPage() {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {program.has_sales ? (
                                 <span className="text-green-600 font-medium">
-                                  {formatCurrency(parseSales(program.total_sales), { minimumFractionDigits: 0 })}
+                                  {formatCurrency(parseSales(program.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               ) : (
                                 <span className="text-gray-400">No sales</span>
