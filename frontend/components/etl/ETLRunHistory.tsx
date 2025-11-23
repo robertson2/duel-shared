@@ -3,7 +3,7 @@ import { Clock, CheckCircle, XCircle, AlertCircle, Loader, Calendar, ExternalLin
 import useSWR from 'swr';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
-const PREFECT_DASHBOARD_URL = process.env.NEXT_PUBLIC_PREFECT_DASHBOARD_URL;
+const PREFECT_DASHBOARD_URL = process.env.NEXT_PUBLIC_PREFECT_DASHBOARD_URL || 'http://localhost:4200';
 
 interface ETLRun {
   dag_run_id: string;
@@ -148,17 +148,15 @@ export const ETLRunHistory = forwardRef<ETLRunHistoryRef>((props, ref) => {
                 {history.total} run{history.total !== 1 ? 's' : ''}
               </div>
             )}
-            {PREFECT_DASHBOARD_URL && (
-              <a
-                href={PREFECT_DASHBOARD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-blue-600 hover:text-blue-700 transition-colors text-sm font-medium"
-              >
-                <span className="mr-1">Open Dashboard</span>
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            )}
+            <a
+              href={PREFECT_DASHBOARD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center text-blue-600 hover:text-blue-700 transition-colors text-sm font-medium"
+            >
+              <span className="mr-1">Open Prefect Dashboard</span>
+              <ExternalLink className="w-4 h-4" />
+            </a>
           </div>
         </div>
         {history && !history.orchestration_available && history.runs.length > 0 && (
