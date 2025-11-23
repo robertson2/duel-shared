@@ -82,6 +82,9 @@ The platform supports three methods for importing data:
 2. **Web Interface Upload**: Upload files via the web interface at `/imports`, then trigger the ETL process manually. Supports multiple archive formats: `.json`, `.zip`, `.tar`, `.gz`, `.tar.gz`, `.tgz`, `.rar` (automatically extracted).
 3. **Direct API Upload**: Send files directly via REST API using `POST /api/v1/upload`.
 
+Here is a video showing the data upload and import process within the platform: [Data Upload Guide](https://boiling-custard-74d.notion.site/Data-upload-2b457359cd418013a4aec2f42fda69c8)
+
+
 **Data Delete**
 
 All data can be deleted from the platfrom via the 'Clear All Database Data' button on the /imports page.
