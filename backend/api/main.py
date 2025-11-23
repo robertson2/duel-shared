@@ -55,6 +55,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import requests
 from requests.auth import HTTPBasicAuth
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # ============================================================================
 # ENVIRONMENT CONFIGURATION
@@ -84,6 +85,10 @@ from backend.api.models.responses import *
 # Initialize database connection pool on application startup
 # This creates a pool of reusable connections (min=2, max=20)
 init_pool()
+
+# In-memory cache for Prefect flow names (flow_id -> flow_name)
+# This avoids repeated API calls for the same flow IDs
+_flow_name_cache = {}
 
 
 # ============================================================================
@@ -2666,10 +2671,10 @@ def get_etl_status():
                         "operator": "and_",
                         "name": {"like_": "Advocacy Platform ETL"}
                     },
-                    "sort": "START_TIME_DESC",
+                    "sort": "EXPECTED_START_TIME_DESC",  # Changed from START_TIME_DESC to catch pending runs
                     "limit": 1
                 },
-                timeout=5
+                timeout=2  # Reduced from 5 to 2 seconds for faster response
             )
             
             if response.status_code == 200:
@@ -2698,6 +2703,9 @@ def get_etl_status():
                     else:
                         state = state_name if state_name else state_type.lower()
                     
+                    # Debug logging
+                    print(f"[ETL Status] Flow run {flow_run_id[:8]}... - Prefect state: {state_type}/{state_name} → Mapped to: {state}")
+                    
                     # Get task runs for progress tracking
                     current_task = None
                     progress = 0
@@ -2711,7 +2719,7 @@ def get_etl_status():
                                     "flow_run_id": {"any_": [flow_run_id]}
                                 }
                             },
-                            timeout=5
+                            timeout=1  # Reduced from 5 to 1 second for faster response
                         )
                         
                         if tasks_response.status_code == 200:
@@ -2960,47 +2968,96 @@ def get_etl_run_history(limit: int = Query(20, ge=1, le=100)):
     """
     Get history of ETL runs from Prefect
     """
+    import time
+    start_time = time.time()
+    
     try:
-        # Get all flow runs (we'll filter in Python)
+        # Simplified approach: Just fetch recent runs and filter in Python
+        # This is faster and more reliable than trying the API filter first
         response = requests.post(
             f"{settings.prefect_api_url}/flow_runs/filter",
             json={
-                "sort": "START_TIME_DESC",
-                "limit": limit * 2  # Get more than needed to account for filtering
+                "sort": "EXPECTED_START_TIME_DESC",
+                "limit": limit + 10  # Fetch a bit more to account for filtering
             },
-            timeout=5
+            timeout=3  # Reduced timeout
         )
         
+        runs = []
+        filter_by_flow_name = True  # Always filter in Python for consistency
+        
         if response.status_code == 200:
-            runs = response.json()
+            runs = response.json() if not runs else runs
+            
+            # Build a flow_id -> flow_name map using cached lookups
+            # Get unique flow IDs from the runs
+            unique_flow_ids = list(set(run.get("flow_id") for run in runs if run.get("flow_id")))
+            
+            # Check cache first to avoid unnecessary API calls
+            uncached_flow_ids = [fid for fid in unique_flow_ids if fid not in _flow_name_cache]
+            
+            # Fetch flow names in parallel for uncached IDs (if any)
+            if uncached_flow_ids:
+                def fetch_flow_name(flow_id):
+                    try:
+                        flow_response = requests.get(
+                            f"{settings.prefect_api_url}/flows/{flow_id}",
+                            timeout=1
+                        )
+                        if flow_response.status_code == 200:
+                            return flow_id, flow_response.json().get("name", "Unknown")
+                    except:
+                        pass
+                    return flow_id, "Unknown"
+                
+                # Use ThreadPoolExecutor for parallel requests (max 5 concurrent)
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    futures = {executor.submit(fetch_flow_name, fid): fid for fid in uncached_flow_ids}
+                    for future in as_completed(futures, timeout=2):
+                        try:
+                            flow_id, flow_name = future.result()
+                            _flow_name_cache[flow_id] = flow_name
+                        except:
+                            pass
+            
+            # Build local cache from global cache
+            flow_name_cache = {fid: _flow_name_cache.get(fid, "Unknown") for fid in unique_flow_ids}
             
             # Format the history data
             history = []
+            
             for run in runs:
-                # Get flow name for this run
+                # Early exit if we already have enough runs
+                if len(history) >= limit:
+                    break
+                
+                # Filter by flow name
                 run_flow_id = run.get("flow_id")
-                flow_name = "Unknown"
-                if run_flow_id:
-                    try:
-                        flow_response = requests.get(
-                            f"{settings.prefect_api_url}/flows/{run_flow_id}",
-                            timeout=2
-                        )
-                        if flow_response.status_code == 200:
-                            flow_name = flow_response.json().get("name", "Unknown")
-                    except:
-                        pass
+                flow_name = flow_name_cache.get(run_flow_id, "Unknown")
                 
                 # Only include runs from "Advocacy Platform ETL" flow
                 if flow_name != "Advocacy Platform ETL":
                     continue
                 
-                # Stop once we have enough runs
-                if len(history) >= limit:
-                    break
+                # Get state information
+                state_obj = run.get("state", {})
+                state_name = state_obj.get("name", "").lower()
+                state_type = state_obj.get("type", "").upper()
+                
+                # Filter out cancelled runs and queued/pending runs
+                # Queued/pending runs don't appear in Prefect dashboard history
+                # History should only show actual executions (running, completed, failed)
+                if "cancelled" in state_name or state_type == "CANCELLED":
+                    continue
+                
+                if ("pending" in state_name or "scheduled" in state_name or 
+                    state_type in ["PENDING", "SCHEDULED"]):
+                    # Skip all queued/pending runs - they're not actual executions yet
+                    continue
                 
                 start_date = run.get("start_time")
                 end_date = run.get("end_time")
+                expected_start = run.get("expected_start_time")
                 
                 # Calculate duration if both dates exist
                 duration = None
@@ -3013,17 +3070,16 @@ def get_etl_run_history(limit: int = Query(20, ge=1, le=100)):
                         pass
                 
                 # Map Prefect state to simple status
-                state_name = run.get("state", {}).get("name", "").lower()
-                if "completed" in state_name:
+                if "completed" in state_name or state_type == "COMPLETED":
                     state = "success"
-                elif "failed" in state_name or "crashed" in state_name:
+                elif "failed" in state_name or "crashed" in state_name or state_type in ["FAILED", "CRASHED"]:
                     state = "failed"
-                elif "running" in state_name:
+                elif "running" in state_name or state_type == "RUNNING":
                     state = "running"
-                elif "pending" in state_name or "scheduled" in state_name:
+                elif "pending" in state_name or "scheduled" in state_name or state_type in ["PENDING", "SCHEDULED"]:
                     state = "queued"
                 else:
-                    state = state_name
+                    state = state_name if state_name else state_type.lower()
                 
                 # Determine run type (manual vs scheduled)
                 run_type = "scheduled"
@@ -3033,50 +3089,39 @@ def get_etl_run_history(limit: int = Query(20, ge=1, le=100)):
                 history.append({
                     "dag_run_id": run.get("id", "")[:16],  # Shorter ID for display
                     "state": state,
-                    "execution_date": run.get("expected_start_time"),
+                    "execution_date": expected_start or start_date,
                     "start_date": start_date,
                     "end_date": end_date,
                     "duration_seconds": duration,
                     "run_type": run_type
                 })
             
-            # If Prefect returned no runs, check if we should fall back to database
-            if len(history) == 0:
-                if settings.prefect_only_history:
-                    # Prefect-only mode: return empty result
-                    return {
-                        "runs": [],
-                        "total": 0,
-                        "orchestration_available": True,
-                        "message": "No Prefect flow runs found"
-                    }
-                else:
-                    # Fallback mode: try database
-                    raise requests.exceptions.RequestException("Prefect has no flow runs, falling back to database")
+            # Return the history
+            if len(history) == 0 and settings.prefect_only_history:
+                return {
+                    "runs": [],
+                    "total": 0,
+                    "orchestration_available": True,
+                    "message": "No ETL runs found"
+                }
+            
+            elapsed = time.time() - start_time
+            print(f"[ETL History] Returned {len(history)} runs in {elapsed:.3f}s (cached: {len(unique_flow_ids) - len(uncached_flow_ids)}/{len(unique_flow_ids)} flows)")
             
             return {
                 "runs": history,
                 "total": len(history),
                 "orchestration_available": True
             }
-        else:
-            # Prefect API returned an error
-            if settings.prefect_only_history:
-                # Prefect-only mode: return empty result instead of falling back
-                return {
-                    "runs": [],
-                    "total": 0,
-                    "orchestration_available": False,
-                    "message": "Prefect is unavailable"
-                }
-            else:
-                return JSONResponse(
-                    status_code=response.status_code,
-                    content={
-                        "success": False,
-                        "error": "Failed to fetch ETL history from Prefect"
-                    }
-                )
+        
+        # Prefect API error - return empty or fall back to database
+        if settings.prefect_only_history:
+            return {
+                "runs": [],
+                "total": 0,
+                "orchestration_available": False,
+                "message": "Prefect is unavailable"
+            }
             
     except requests.exceptions.RequestException:
         # Prefect is unavailable - check if we should fall back to database

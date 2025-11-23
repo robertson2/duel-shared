@@ -32,13 +32,26 @@ export const ETLRunHistory = forwardRef<ETLRunHistoryRef>((props, ref) => {
   const { data: history, error, isLoading, mutate } = useSWR<ETLHistory>(
     `${API_BASE_URL}/api/v1/etl/history?limit=5`,
     fetcher,
-    { refreshInterval: 10000 } // Refresh every 10 seconds
+    { 
+      // Dynamic refresh: 2s when there's an active run, 10s when idle
+      refreshInterval: (latestData) => {
+        const hasActiveRun = latestData?.runs?.some(run => run.state === 'running' || run.state === 'queued');
+        return hasActiveRun ? 2000 : 10000; // Increased from 1s/5s to 2s/10s
+      },
+      revalidateOnFocus: false, // Disable revalidate on focus to reduce requests
+      dedupingInterval: 1000, // Increased to 1 second to prevent rapid duplicate calls
+      onSuccess: (data) => {
+        const hasActiveRun = data?.runs?.some(run => run.state === 'running' || run.state === 'queued');
+        console.log('[ETL History] Data refreshed. Total runs:', data?.total, 'Active run:', hasActiveRun);
+      }
+    }
   );
 
   // Expose refresh method to parent via ref
   useImperativeHandle(ref, () => ({
     refresh: () => {
-      mutate();
+      console.log('[ETL History] Manual refresh triggered');
+      mutate(undefined, { revalidate: true }); // Force revalidation, bypass cache
     }
   }));
 
@@ -183,7 +196,7 @@ export const ETLRunHistory = forwardRef<ETLRunHistoryRef>((props, ref) => {
               {history?.message || 'An error occurred loading history'}
             </p>
           </div>
-        ) : history.runs.length === 0 ? (
+        ) : !history || history.runs.length === 0 ? (
           <div className="text-center py-12">
             <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No ETL runs yet</p>
@@ -211,7 +224,7 @@ export const ETLRunHistory = forwardRef<ETLRunHistoryRef>((props, ref) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {history.runs.map((run) => (
+              {history?.runs?.map((run) => (
                 <tr key={run.dag_run_id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Clock, CheckCircle, XCircle, Loader, AlertCircle, StopCircle, AlertTriangle } from 'lucide-react';
+import { Play, Clock, CheckCircle, XCircle, Loader, AlertCircle, AlertTriangle } from 'lucide-react';
 import useSWR from 'swr';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
@@ -44,7 +44,6 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
   const [timeUntilNext, setTimeUntilNext] = useState<string>('');
   const [runDuration, setRunDuration] = useState<string>('');
   const [triggering, setTriggering] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [triggerResult, setTriggerResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Fetch ETL schedule
@@ -55,10 +54,17 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
   );
 
   // Fetch ETL status
-  const { data: status, error: statusError } = useSWR<ETLStatus>(
+  const { data: status, error: statusError, mutate: mutateStatus } = useSWR<ETLStatus>(
     `${API_BASE_URL}/api/v1/etl/status`,
     fetcher,
-    { refreshInterval: 2000 } // Refresh every 2 seconds
+    { 
+      refreshInterval: 3000, // Refresh every 3 seconds (balanced approach)
+      revalidateOnFocus: false, // Disable revalidate on focus
+      dedupingInterval: 1000, // 1 second deduplication to prevent rapid calls
+      onSuccess: (data) => {
+        console.log('[ETL] Status updated:', data?.state, 'Run ID:', data?.dag_run_id);
+      }
+    }
   );
 
   // Fetch pending files count
@@ -112,16 +118,29 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
     }
   }, [status]);
 
+  // Auto-dismiss toast after 5 seconds
+  useEffect(() => {
+    if (triggerResult) {
+      const timer = setTimeout(() => {
+        setTriggerResult(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [triggerResult]);
+
   const handleTriggerETL = async () => {
+    console.log('[ETL] Trigger button clicked');
     setTriggering(true);
     setTriggerResult(null);
 
     try {
+      console.log('[ETL] Sending trigger request to:', `${API_BASE_URL}/api/v1/etl/trigger`);
       const response = await fetch(`${API_BASE_URL}/api/v1/etl/trigger`, {
         method: 'POST',
       });
 
       const data = await response.json();
+      console.log('[ETL] Trigger response:', data);
 
       if (response.ok && data.success) {
         setTriggerResult({
@@ -129,19 +148,31 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
           message: data.message || 'ETL pipeline triggered successfully!',
         });
         
-        // Refresh the history after triggering
+        console.log('[ETL] Refreshing status and history immediately...');
+        
+        // Refresh immediately to catch the new run
+        await mutateStatus(undefined, { revalidate: true });
         if (onETLTriggered) {
-          setTimeout(() => {
-            onETLTriggered();
-          }, 1000); // Wait 1 second for the flow to register
+          onETLTriggered();
         }
+        
+        // Refresh again after 1.5 seconds to ensure Prefect has fully registered the run
+        setTimeout(async () => {
+          console.log('[ETL] Second refresh at 1500ms to confirm state');
+          await mutateStatus(undefined, { revalidate: true });
+          if (onETLTriggered) {
+            onETLTriggered();
+          }
+        }, 1500);
       } else {
+        console.error('[ETL] Trigger failed:', data);
         setTriggerResult({
           success: false,
           message: data.error || data.details || 'Failed to trigger ETL pipeline',
         });
       }
     } catch (error) {
+      console.error('[ETL] Trigger error:', error);
       setTriggerResult({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to trigger ETL. Is Prefect running?',
@@ -151,51 +182,52 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
     }
   };
 
-  const handleCancelETL = async () => {
-    if (!status?.dag_run_id) return;
-
-    setCancelling(true);
-    setTriggerResult(null);
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/etl/cancel/${status.dag_run_id}`, {
-        method: 'POST',
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setTriggerResult({
-          success: true,
-          message: data.message || 'ETL pipeline cancelled successfully!',
-        });
-        
-        // Refresh the history after cancelling
-        if (onETLTriggered) {
-          setTimeout(() => {
-            onETLTriggered();
-          }, 1000);
-        }
-      } else {
-        setTriggerResult({
-          success: false,
-          message: data.error || 'Failed to cancel ETL pipeline',
-        });
-      }
-    } catch (error) {
-      setTriggerResult({
-        success: false,
-        message: error instanceof Error ? error.message : 'Failed to cancel ETL',
-      });
-    } finally {
-      setCancelling(false);
-    }
-  };
-
   const isRunning = status?.state === 'running';
   const isQueued = status?.state === 'queued';
   const hasPendingFiles = pendingFiles && pendingFiles.count > 0;
   const canTrigger = !isRunning && !isQueued && !triggering && status?.orchestration_available !== false && hasPendingFiles;
+
+  // Debug logging for button state
+  useEffect(() => {
+    console.log('[ETL Button State]', {
+      isRunning,
+      isQueued,
+      triggering,
+      currentState: status?.state,
+      buttonDisabled: isRunning || isQueued || !canTrigger
+    });
+  }, [isRunning, isQueued, triggering, status?.state, canTrigger]);
+
+  // Track previous status to detect completion
+  const [prevStatus, setPrevStatus] = useState<string | undefined>(undefined);
+
+  // Auto-refresh history when run completes
+  useEffect(() => {
+    if (status?.state && prevStatus) {
+      const wasRunning = prevStatus === 'running' || prevStatus === 'queued';
+      const isCompleted = status.state === 'success' || status.state === 'failed';
+      
+      if (wasRunning && isCompleted) {
+        console.log('[ETL] Run completed! State changed from', prevStatus, 'to', status.state);
+        console.log('[ETL] Refreshing history table...');
+        
+        // Refresh history immediately when run completes
+        if (onETLTriggered) {
+          onETLTriggered();
+        }
+        
+        // Refresh again after a short delay to ensure data is consistent
+        setTimeout(() => {
+          if (onETLTriggered) {
+            onETLTriggered();
+          }
+        }, 1000);
+      }
+    }
+    
+    // Update previous status
+    setPrevStatus(status?.state);
+  }, [status?.state, prevStatus, onETLTriggered]);
 
   const getStatusBadge = (state?: string) => {
     switch (state) {
@@ -243,7 +275,8 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    <>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -383,97 +416,78 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
           </div>
         </div>
 
-        {/* Trigger/Cancel Buttons */}
+        {/* Trigger Button */}
         <div className="space-y-3">
-          {isRunning || isQueued ? (
-            <>
-              <button
-                onClick={handleCancelETL}
-                disabled={cancelling}
-                className={`w-full flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all ${
-                  cancelling
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-red-600 text-white hover:bg-red-700 shadow-md hover:shadow-lg'
-                }`}
-              >
-                {cancelling ? (
-                  <>
-                    <Loader className="w-5 h-5 mr-2 animate-spin" />
-                    Cancelling...
-                  </>
-                ) : (
-                  <>
-                    <StopCircle className="w-5 h-5 mr-2" />
-                    Cancel ETL Run
-                  </>
-                )}
-              </button>
-              <p className="text-xs text-gray-500 text-center">
-                ETL is currently {isRunning ? 'running' : 'queued'}. Click to cancel.
-              </p>
-            </>
-          ) : (
-            <>
-              <button
-                onClick={handleTriggerETL}
-                disabled={!canTrigger}
-                className={`w-full flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all ${
-                  canTrigger
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {triggering ? (
-                  <>
-                    <Loader className="w-5 h-5 mr-2 animate-spin" />
-                    Triggering...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-5 h-5 mr-2" />
-                    Trigger ETL Now
-                  </>
-                )}
-              </button>
-              
-              {!canTrigger && !triggering && (
-                <p className="text-xs text-gray-500 text-center">
-                  {status?.orchestration_available === false
-                    ? 'Prefect is not available'
-                    : !hasPendingFiles
-                    ? 'No files to process'
-                    : 'Unable to trigger ETL'}
-                </p>
-              )}
-            </>
+          <button
+            onClick={handleTriggerETL}
+            disabled={!canTrigger || isRunning || isQueued}
+            className={`w-full flex items-center justify-center px-6 py-3 rounded-lg font-medium transition-all ${
+              canTrigger && !isRunning && !isQueued
+                ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            {triggering ? (
+              <>
+                <Loader className="w-5 h-5 mr-2 animate-spin" />
+                Triggering...
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Trigger ETL Now
+              </>
+            )}
+          </button>
+          
+          {(!canTrigger || isRunning || isQueued) && !triggering && (
+            <p className="text-xs text-gray-500 text-center">
+              {isRunning
+                ? 'ETL is currently running'
+                : isQueued
+                ? 'ETL is queued'
+                : status?.orchestration_available === false
+                ? 'Prefect is not available'
+                : !hasPendingFiles
+                ? 'No files to process'
+                : 'Unable to trigger ETL'}
+            </p>
           )}
         </div>
+      </div>
+    </div>
 
-        {/* Trigger Result */}
-        {triggerResult && (
+      {/* Toast Notification */}
+      {triggerResult && (
+        <div className="fixed bottom-8 right-8 z-50 animate-fade-in">
           <div
-            className={`rounded-lg p-4 flex items-start ${
+            className={`px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 ${
               triggerResult.success
-                ? 'bg-green-50 border border-green-200'
-                : 'bg-red-50 border border-red-200'
+                ? 'bg-green-600 text-white'
+                : 'bg-red-600 text-white'
             }`}
           >
             {triggerResult.success ? (
-              <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" />
+              <CheckCircle className="w-5 h-5" />
             ) : (
-              <XCircle className="w-5 h-5 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+              <XCircle className="w-5 h-5" />
             )}
-            <p
-              className={`text-sm ${
-                triggerResult.success ? 'text-green-900' : 'text-red-900'
-              }`}
-            >
-              {triggerResult.message}
-            </p>
+            <div>
+              <div className="font-semibold">
+                {triggerResult.success ? 'Success!' : 'Error'}
+              </div>
+              <div
+                className={`text-sm ${
+                  triggerResult.success ? 'text-green-100' : 'text-red-100'
+                }`}
+              >
+                {triggerResult.message}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 

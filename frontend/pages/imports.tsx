@@ -2,11 +2,12 @@ import React, { useState, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardHeader } from '@/components/ui/Card';
-import { Upload, CheckCircle, XCircle, File as FileIcon, Loader, AlertTriangle } from 'lucide-react';
+import { Upload, CheckCircle, XCircle, File as FileIcon, Loader, AlertTriangle, Info, ExternalLink } from 'lucide-react';
 import { ETLStatusCard } from '@/components/etl/ETLStatusCard';
 import { ETLRunHistory, ETLRunHistoryRef } from '@/components/etl/ETLRunHistory';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const PREFECT_DASHBOARD_URL = process.env.NEXT_PUBLIC_PREFECT_DASHBOARD_URL || 'http://localhost:4200';
 
 export default function ImportsPage() {
   const [uploading, setUploading] = useState(false);
@@ -18,8 +19,22 @@ export default function ImportsPage() {
   } | null>(null);
   const [showClearDataConfirm, setShowClearDataConfirm] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [clearDataToast, setClearDataToast] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const etlHistoryRef = useRef<ETLRunHistoryRef>(null);
+
+  // Auto-dismiss clear data toast after 5 seconds
+  React.useEffect(() => {
+    if (clearDataToast) {
+      const timer = setTimeout(() => {
+        setClearDataToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [clearDataToast]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -144,13 +159,13 @@ export default function ImportsPage() {
 
       if (response.ok) {
         setShowClearDataConfirm(false);
-        setUploadResult({
+        setClearDataToast({
           success: true,
           message: result.message || 'All database data cleared successfully',
         });
       } else {
         setShowClearDataConfirm(false);
-        setUploadResult({
+        setClearDataToast({
           success: false,
           message: result.error || 'Failed to clear database',
         });
@@ -158,7 +173,7 @@ export default function ImportsPage() {
     } catch (error) {
       console.error('Clear data error:', error);
       setShowClearDataConfirm(false);
-      setUploadResult({
+      setClearDataToast({
         success: false,
         message: error instanceof Error ? error.message : 'Failed to clear database. Is the backend running?',
       });
@@ -181,6 +196,37 @@ export default function ImportsPage() {
         />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Instructions Section */}
+          <div className="mb-6 bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+            <div className="flex items-start">
+              <Info className="h-5 w-5 text-blue-600 mr-3 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-blue-900 mb-3">Instructions</h3>
+                <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                  <li className="pl-2">
+                    Upload the relevant data files using the upload section below.
+                  </li>
+                  <li className="pl-2">
+                    Once files have been uploaded, you can either wait for the next ETL run (details are in the countdown below), or trigger the run manually using the "Trigger ETL Now" button.
+                  </li>
+                  <li className="pl-2">
+                    Once triggered, you can see details of the run in the history log table or by opening the{' '}
+                    <a
+                      href={PREFECT_DASHBOARD_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-700 hover:text-blue-800 underline font-medium inline-flex items-center"
+                    >
+                      Prefect dashboard
+                      <ExternalLink className="w-3 h-3 ml-1" />
+                    </a>
+                    .
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
           {/* Danger Zone - Clear Database */}
           <div className="mb-6 bg-red-50 border-2 border-red-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
@@ -374,6 +420,37 @@ export default function ImportsPage() {
                       {clearing ? 'Deleting...' : 'Yes, Delete All Data'}
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Clear Data Toast Notification */}
+        {clearDataToast && (
+          <div className="fixed bottom-8 right-8 z-50 animate-fade-in">
+            <div
+              className={`px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 ${
+                clearDataToast.success
+                  ? 'bg-green-600 text-white'
+                  : 'bg-red-600 text-white'
+              }`}
+            >
+              {clearDataToast.success ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <XCircle className="w-5 h-5" />
+              )}
+              <div>
+                <div className="font-semibold">
+                  {clearDataToast.success ? 'Success!' : 'Error'}
+                </div>
+                <div
+                  className={`text-sm ${
+                    clearDataToast.success ? 'text-green-100' : 'text-red-100'
+                  }`}
+                >
+                  {clearDataToast.message}
                 </div>
               </div>
             </div>
