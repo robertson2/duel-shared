@@ -46,11 +46,21 @@ A modern, real-time analytics dashboard for the Advocacy Platform built with Nex
    cp .env.example .env.local
    ```
 
-4. **Configure API URL (optional):**
-   Edit `.env.local` if your API is running on a different port:
+4. **Configure environment variables:**
+   Edit `.env.local` with your configuration:
    ```env
+   # API Configuration
+   # The base URL for the FastAPI backend
    NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+
+   # Prefect Dashboard URL (optional)
+   # Used for ETL Pipeline Control links in the dashboard
+   NEXT_PUBLIC_PREFECT_DASHBOARD_URL=http://localhost:4200
    ```
+   
+   **Environment Variables:**
+   - `NEXT_PUBLIC_API_URL` - The base URL for the FastAPI backend (default: `http://127.0.0.1:8000`)
+   - `NEXT_PUBLIC_PREFECT_DASHBOARD_URL` - The URL where Prefect dashboard is running (default: `http://localhost:4200`, optional)
 
 ## Running the Application
 

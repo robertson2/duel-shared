@@ -202,6 +202,8 @@ Configuration via `.env` file (copy from `env.example`):
 
 See `env.example` for complete template.
 
+**Frontend Configuration:** The frontend requires its own environment file (`.env.local`). See [Frontend README](frontend/README.md#installation) for setup instructions and environment variable details.
+
 ## 🧪 Testing & Development
 
 ### Testing
