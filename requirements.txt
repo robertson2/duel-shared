@@ -10,6 +10,7 @@ pydantic>=2.9.0
 psycopg[binary]>=3.2.0
 psycopg-pool>=3.2.0  # Connection pooling for efficient DB access
 psycopg2-binary>=2.9.9  # Required by Prefect for database migrations
+asyncpg>=0.29.0  # Required by Prefect for async database operations
 SQLAlchemy>=2.0.36
 
 # Data processing (optional - comment out if not needed)
