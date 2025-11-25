@@ -627,7 +627,7 @@ export default function AdvocatesPage() {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                              {formatCurrency(advocate.total_sales || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {formatCurrency(parseSales(advocate.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                               {advocate.total_programs || 0}

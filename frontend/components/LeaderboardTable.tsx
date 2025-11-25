@@ -3,6 +3,7 @@ import { Card, CardHeader } from './ui/Card';
 import { Trophy, Medal, Award } from 'lucide-react';
 import clsx from 'clsx';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { parseSales } from '@/lib/api';
 
 interface LeaderboardItem {
   account_id: string;
@@ -152,7 +153,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                  {formatCurrency(item.total_sales || 0, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(parseSales(item.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                   {item.total_programs || 0}
