@@ -229,16 +229,16 @@ export default function OutliersPage() {
       return;
     }
 
-    const headers = ['Date', 'Advocate', 'Email', 'Brand', 'Amount', 'Outlier Type', 'Z-Score', 'Deviation %'];
+    const headers = ['Date', 'Advocate', 'Email', 'Brand', 'Amount', 'Outlier Type', 'Z-Score', 'Avg Sale'];
     const rows = filteredSalesOutliers.map((outlier) => [
-      new Date(outlier.transaction_date).toLocaleDateString(),
+      new Date(outlier.attributed_at).toLocaleDateString(),
       outlier.advocate_user_name || '',
       outlier.account_email || '',
       outlier.brand || '',
       outlier.amount || 0,
       outlier.outlier_type || '',
       outlier.z_score ? outlier.z_score.toFixed(2) : '',
-      outlier.deviation_pct ? outlier.deviation_pct.toFixed(1) : ''
+      outlier.avg_sale ? outlier.avg_sale.toFixed(2) : ''
     ]);
 
     downloadCSV(headers, rows, `sales_outliers_${new Date().toISOString().split('T')[0]}.csv`);
@@ -250,15 +250,15 @@ export default function OutliersPage() {
       return;
     }
 
-    const headers = ['Date', 'Advocate', 'Email', 'Platform', 'Brand', 'Engagement Category', 'Value', 'Z-Score'];
+    const headers = ['Advocate', 'Email', 'Platform', 'Brand', 'Engagement Category', 'Engagement Score', 'Avg Engagement', 'Z-Score'];
     const rows = filteredEngagementAnomalies.map((anomaly) => [
-      new Date(anomaly.measured_at).toLocaleDateString(),
       anomaly.advocate_user_name || '',
       anomaly.account_email || '',
       anomaly.platform || '',
       anomaly.brand || '',
       anomaly.engagement_category || '',
-      anomaly.engagement_value || 0,
+      anomaly.engagement_score || 0,
+      anomaly.avg_engagement ? anomaly.avg_engagement.toFixed(2) : '',
       anomaly.z_score ? anomaly.z_score.toFixed(2) : ''
     ]);
 
@@ -271,14 +271,15 @@ export default function OutliersPage() {
       return;
     }
 
-    const headers = ['Email', 'User Names', 'Engagement', 'Sales', 'Efficiency Score', 'Programs'];
+    const headers = ['Email', 'User Names', 'Engagement Score', 'Sales', 'Sales Efficiency', 'Tasks', 'Conversion Rate'];
     const rows = filteredEfficientConverters.map((converter) => [
       converter.email || '',
       converter.user_names || '',
-      converter.total_engagement || 0,
+      converter.total_engagement_score || 0,
       converter.total_sales || 0,
-      converter.efficiency_score ? converter.efficiency_score.toFixed(2) : '',
-      converter.total_programs || 0
+      converter.sales_efficiency ? converter.sales_efficiency.toFixed(2) : '',
+      converter.total_tasks || 0,
+      converter.program_conversion_rate ? (converter.program_conversion_rate * 100).toFixed(1) + '%' : ''
     ]);
 
     downloadCSV(headers, rows, `efficient_converters_${new Date().toISOString().split('T')[0]}.csv`);
