@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
-import { apiClient } from '@/lib/api';
+import { apiClient, parseSales, DataQualityIssue } from '@/lib/api';
 import { Card } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -23,7 +23,6 @@ import {
   CheckCircle,
   Download,
 } from 'lucide-react';
-import { parseSales } from '@/lib/api';
 import clsx from 'clsx';
 
 type TabType = 'overview' | 'programs' | 'sales' | 'social' | 'issues';
@@ -160,7 +159,7 @@ export default function AdvocateDetailPage() {
       program.completed_at ? new Date(program.completed_at as string).toLocaleDateString() : '',
       program.tasks || 0,
       program.total_engagement || 0,
-      parseSales(program.total_sales)
+      parseSales(program.total_sales as string | number | null)
     ]);
 
     downloadCSV(headers, rows, `programs_${engagement.email}_${new Date().toISOString().split('T')[0]}.csv`);
@@ -177,7 +176,7 @@ export default function AdvocateDetailPage() {
       new Date(sale.attributed_at as string).toLocaleDateString(),
       sale.brand || '',
       sale.program_name || '',
-      parseSales(sale.amount),
+      parseSales(sale.amount as string | number | null),
       sale.order_id || '',
       sale.user_name || ''
     ]);
@@ -213,11 +212,11 @@ export default function AdvocateDetailPage() {
     }
 
     const headers = ['Severity', 'Type', 'Description', 'Detected', 'Status'];
-    const rows = issues.map((issue: Record<string, unknown>) => [
+    const rows = issues.map((issue: DataQualityIssue) => [
       issue.severity || '',
       issue.issue_type || '',
       issue.issue_description || '',
-      new Date(issue.detected_at as string).toLocaleDateString(),
+      new Date(issue.detected_at).toLocaleDateString(),
       issue.resolved ? 'Resolved' : 'Open'
     ]);
 
@@ -471,35 +470,35 @@ export default function AdvocateDetailPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {programs.map((program: Record<string, unknown>) => (
-                          <tr key={program.program_id} className="hover:bg-gray-50">
+                          <tr key={program.program_id as string} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {program.brand || 'N/A'}
+                              {(program.brand as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900">
-                              {program.program_name || 'N/A'}
+                              {(program.program_name as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               {program.started_at && program.completed_at ? (
                                 <>
-                                  {new Date(program.started_at).toLocaleDateString()} -{' '}
-                                  {new Date(program.completed_at).toLocaleDateString()}
+                                  {new Date(program.started_at as string).toLocaleDateString()} -{' '}
+                                  {new Date(program.completed_at as string).toLocaleDateString()}
                                 </>
                               ) : program.started_at ? (
-                                new Date(program.started_at).toLocaleDateString()
+                                new Date(program.started_at as string).toLocaleDateString()
                               ) : (
                                 'N/A'
                               )}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {program.tasks || 0}
+                              {(program.tasks as number) || 0}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {(program.total_engagement || 0).toLocaleString()}
+                              {((program.total_engagement as number) || 0).toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {program.has_sales ? (
                                 <span className="text-green-600 font-medium">
-                                  {formatCurrency(parseSales(program.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  {formatCurrency(parseSales(program.total_sales as string | number), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               ) : (
                                 <span className="text-gray-400">No sales</span>
@@ -572,25 +571,25 @@ export default function AdvocateDetailPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {sales.map((sale: Record<string, unknown>) => (
-                          <tr key={sale.attribution_id} className="hover:bg-gray-50">
+                          <tr key={sale.attribution_id as string} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(sale.attributed_at).toLocaleDateString()}
+                              {new Date(sale.attributed_at as string).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {sale.brand || 'N/A'}
+                              {(sale.brand as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-900">
-                              {sale.program_name || 'N/A'}
+                              {(sale.program_name as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium">
-                              {formatCurrency(parseSales(sale.amount), { minimumFractionDigits: 2 })}
+                              {formatCurrency(parseSales(sale.amount as string | number), { minimumFractionDigits: 2 })}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {sale.order_id || 'N/A'}
+                              {(sale.order_id as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 max-w-xs">
-                              <div className="text-sm text-gray-500 truncate" title={sale.user_name || 'N/A'}>
-                                {sale.user_name || 'N/A'}
+                              <div className="text-sm text-gray-500 truncate" title={(sale.user_name as string) || 'N/A'}>
+                                {(sale.user_name as string) || 'N/A'}
                               </div>
                             </td>
                           </tr>
@@ -666,21 +665,21 @@ export default function AdvocateDetailPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {socialAnalytics.map((analytics: Record<string, unknown>) => (
-                          <tr key={analytics.analytics_id} className="hover:bg-gray-50">
+                          <tr key={analytics.analytics_id as string} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(analytics.measured_at).toLocaleDateString()}
+                              {new Date(analytics.measured_at as string).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {analytics.platform || 'N/A'}
+                              {(analytics.platform as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {analytics.brand || 'N/A'}
+                              {(analytics.brand as string) || 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {(analytics.likes || 0).toLocaleString()}
+                              {((analytics.likes as number) || 0).toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {(analytics.comments || 0).toLocaleString()}
+                              {((analytics.comments as number) || 0).toLocaleString()}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {(analytics.shares || 0).toLocaleString()}

@@ -2,7 +2,7 @@ import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
-import { apiClient } from '@/lib/api';
+import { apiClient, parseSales } from '@/lib/api';
 import { StatCard } from '@/components/ui/StatCard';
 import { Loading, LoadingCard } from '@/components/ui/Loading';
 import { PlatformChart } from '@/components/charts/PlatformChart';
@@ -24,25 +24,6 @@ import Link from 'next/link';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
 
-// Currency icon component that displays £ or $ based on currency
-const CurrencyIcon: React.FC<{ className?: string }> = ({ className }) => {
-  const { currency } = useCurrency();
-  const symbol = currency === 'GBP' ? '£' : '$';
-  return (
-    <span 
-      className={className} 
-      style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        fontWeight: 'bold',
-        fontSize: '2rem'
-      }}
-    >
-      {symbol}
-    </span>
-  );
-};
 
 export default function Dashboard() {
   const router = useRouter();
@@ -176,7 +157,7 @@ export default function Dashboard() {
             <StatCard
               title="Total Revenue"
               value={formatCurrency(totalRevenue, { minimumFractionDigits: 0 })}
-              icon={CurrencyIcon}
+              icon={Target}
               iconColor="text-green-500"
               loading={!dashboardStats}
             />
@@ -215,7 +196,7 @@ export default function Dashboard() {
               }
               subtitle={topAccounts?.[0]?.user_names || ''}
               trend="up"
-              trendValue={formatCurrency(topAccounts?.[0]?.total_sales || 0, { minimumFractionDigits: 0 })}
+              trendValue={formatCurrency(parseSales(topAccounts?.[0]?.total_sales), { minimumFractionDigits: 0 })}
               icon={Trophy}
               iconColor="text-yellow-500"
               onClick={() => {
@@ -248,7 +229,6 @@ export default function Dashboard() {
               subtitle="Active campaigns"
               icon={Award}
               iconColor="text-purple-500"
-              loading={!dashboardStats}
             />
           </div>
 

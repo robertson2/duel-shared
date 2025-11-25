@@ -168,8 +168,7 @@ export default function BrandsPage() {
         brand.total_advocates || 0,
         brand.total_programs || 0,
         Number(brand.sales_per_advocate || 0),
-        Number(brand.avg_engagement_per_program || 0),
-        brand.total_tasks || 0
+        Number(brand.avg_engagement_score || 0)
       ];
     });
 

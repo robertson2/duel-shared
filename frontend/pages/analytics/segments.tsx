@@ -171,16 +171,14 @@ export default function SegmentsPage() {
       return;
     }
 
-    const headers = ['Email', 'User Names', 'Efficiency Segment', 'Engagement', 'Sales', 'Efficiency Score', 'Programs', 'Conversion Rate'];
+    const headers = ['Segment', 'Accounts', 'Avg Efficiency', 'Avg Sales', 'Avg Engagement', 'Avg Conversion Rate'];
     const rows = efficiencySegments.map((segment) => [
-      segment.email || '',
-      segment.user_names || '',
-      segment.efficiency_segment || '',
-      segment.total_engagement_score || 0,
-      parseSales(segment.total_sales),
-      segment.efficiency_score ? segment.efficiency_score.toFixed(2) : 0,
-      segment.total_programs || 0,
-      segment.program_conversion_rate ? segment.program_conversion_rate.toFixed(1) : 0
+      segment.converter_segment || '',
+      segment.account_count || 0,
+      segment.avg_efficiency?.toFixed(3) || '0',
+      segment.avg_sales?.toFixed(2) || '0',
+      segment.avg_engagement?.toFixed(0) || '0',
+      segment.avg_program_conversion_rate ? (segment.avg_program_conversion_rate * 100).toFixed(1) + '%' : '0%'
     ]);
 
     downloadCSV(headers, rows, `efficiency_segments_${new Date().toISOString().split('T')[0]}.csv`);

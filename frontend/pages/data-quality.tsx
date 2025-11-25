@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
-import { apiClient } from '@/lib/api';
+import { apiClient, DataQualityIssue } from '@/lib/api';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -44,7 +44,7 @@ export default function DataQualityPage() {
     setCurrentPage(1);
   }, [severityFilter, itemsPerPage]);
 
-  const handleIssueClick = (issue: Record<string, unknown>) => {
+  const handleIssueClick = (issue: DataQualityIssue) => {
     // Navigate to advocate page if account_id is available
     if (issue.account_id) {
       router.push(`/advocates/${issue.account_id}`);
@@ -126,8 +126,7 @@ export default function DataQualityPage() {
         issue.issue_description || '',
         issue.account_id || '',
         issue.detected_at ? new Date(issue.detected_at).toLocaleString() : '',
-        issue.resolved ? 'Resolved' : 'Open',
-        issue.resolved_at ? new Date(issue.resolved_at).toLocaleString() : ''
+        issue.resolved ? 'Resolved' : 'Open'
       ];
     });
 

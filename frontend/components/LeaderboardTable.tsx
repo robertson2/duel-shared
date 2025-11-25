@@ -10,14 +10,14 @@ interface LeaderboardItem {
   email: string;
   total_users: number;
   user_names: string | null;
-  total_engagement_score?: number;
-  total_impact_score?: number;
-  avg_engagement_rate?: number;
-  total_sales?: number;
-  programs_with_sales?: number;
-  program_conversion_rate?: number;
-  total_programs?: number;
-  total_tasks?: number;
+  total_engagement_score?: number | null;
+  total_impact_score?: number | null;
+  avg_engagement_rate?: number | null;
+  total_sales?: number | string | null;
+  programs_with_sales?: number | null;
+  program_conversion_rate?: number | null;
+  total_programs?: number | null;
+  total_tasks?: number | null;
 }
 
 interface LeaderboardTableProps {
@@ -135,7 +135,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
                   <div className="font-medium text-green-600">
-                    {formatNumber(item.total_engagement_score)}
+                    {formatNumber(item.total_engagement_score ?? 0)}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
@@ -153,7 +153,7 @@ export const LeaderboardTable: React.FC<LeaderboardTableProps> = ({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                  {formatCurrency(parseSales(item.total_sales), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {formatCurrency(parseSales(item.total_sales || null), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm text-gray-500">
                   {item.total_programs || 0}
