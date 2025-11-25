@@ -20,7 +20,7 @@ interface BrandChartProps {
 }
 
 export const BrandChart: React.FC<BrandChartProps> = ({ data, limit = 10 }) => {
-  const { formatCurrency, getCurrencySymbol } = useCurrency();
+  const { formatCurrency } = useCurrency();
   
   const chartData = data
     .filter((item) => item.brand && item.brand !== 'Unknown')

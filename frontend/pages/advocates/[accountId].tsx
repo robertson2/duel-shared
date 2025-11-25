@@ -153,7 +153,7 @@ export default function AdvocateDetailPage() {
     }
 
     const headers = ['Brand', 'Campaign', 'Start Date', 'End Date', 'Tasks', 'Engagement', 'Sales'];
-    const rows = programs.map((program: any) => [
+    const rows = programs.map((program: Record<string, unknown>) => [
       program.brand || '',
       program.program_name || '',
       program.started_at ? new Date(program.started_at).toLocaleDateString() : '',
@@ -173,7 +173,7 @@ export default function AdvocateDetailPage() {
     }
 
     const headers = ['Date', 'Brand', 'Campaign', 'Amount', 'Order ID', 'User'];
-    const rows = sales.map((sale: any) => [
+    const rows = sales.map((sale: Record<string, unknown>) => [
       new Date(sale.attributed_at).toLocaleDateString(),
       sale.brand || '',
       sale.program_name || '',
@@ -192,7 +192,7 @@ export default function AdvocateDetailPage() {
     }
 
     const headers = ['Date', 'Platform', 'Brand', 'Likes', 'Comments', 'Shares', 'Reach', 'Engagement Score'];
-    const rows = socialAnalytics.map((analytics: any) => [
+    const rows = socialAnalytics.map((analytics: Record<string, unknown>) => [
       new Date(analytics.measured_at).toLocaleDateString(),
       analytics.platform || '',
       analytics.brand || '',
@@ -213,7 +213,7 @@ export default function AdvocateDetailPage() {
     }
 
     const headers = ['Severity', 'Type', 'Description', 'Detected', 'Status'];
-    const rows = issues.map((issue: any) => [
+    const rows = issues.map((issue: Record<string, unknown>) => [
       issue.severity || '',
       issue.issue_type || '',
       issue.issue_description || '',
@@ -225,7 +225,7 @@ export default function AdvocateDetailPage() {
   };
 
   // Helper function to download CSV
-  const downloadCSV = (headers: string[], rows: any[][], filename: string) => {
+  const downloadCSV = (headers: string[], rows: (string | number)[][], filename: string) => {
     const csvContent = [
       headers.join(','),
       ...rows.map(row => 
@@ -439,7 +439,7 @@ export default function AdvocateDetailPage() {
                       No Programs Found
                     </h3>
                     <p className="text-gray-600">
-                      This advocate hasn't participated in any programs yet.
+                      This advocate hasn&apos;t participated in any programs yet.
                     </p>
                   </div>
                 )}
@@ -470,7 +470,7 @@ export default function AdvocateDetailPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {programs.map((program: any) => (
+                        {programs.map((program: Record<string, unknown>) => (
                           <tr key={program.program_id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                               {program.brand || 'N/A'}
@@ -540,7 +540,7 @@ export default function AdvocateDetailPage() {
                       No Sales Found
                     </h3>
                     <p className="text-gray-600">
-                      This advocate hasn't generated any sales yet.
+                      This advocate hasn&apos;t generated any sales yet.
                     </p>
                   </div>
                 )}
@@ -571,7 +571,7 @@ export default function AdvocateDetailPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {sales.map((sale: any) => (
+                        {sales.map((sale: Record<string, unknown>) => (
                           <tr key={sale.attribution_id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {new Date(sale.attributed_at).toLocaleDateString()}
@@ -628,7 +628,7 @@ export default function AdvocateDetailPage() {
                       No Analytics Found
                     </h3>
                     <p className="text-gray-600">
-                      This advocate hasn't posted any content with analytics yet.
+                      This advocate hasn&apos;t posted any content with analytics yet.
                     </p>
                   </div>
                 )}
@@ -665,7 +665,7 @@ export default function AdvocateDetailPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {socialAnalytics.map((analytics: any) => (
+                        {socialAnalytics.map((analytics: Record<string, unknown>) => (
                           <tr key={analytics.analytics_id} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                               {new Date(analytics.measured_at).toLocaleDateString()}

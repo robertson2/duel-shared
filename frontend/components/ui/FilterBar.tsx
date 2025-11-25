@@ -1,6 +1,5 @@
 import React from 'react';
 import { Filter, X } from 'lucide-react';
-import clsx from 'clsx';
 
 export interface FilterOption {
   label: string;
@@ -16,8 +15,8 @@ export interface FilterConfig {
 
 interface FilterBarProps {
   filters: FilterConfig[];
-  values: Record<string, any>;
-  onChange: (filterId: string, value: any) => void;
+  values: Record<string, string | number>;
+  onChange: (filterId: string, value: string | number) => void;
   onReset: () => void;
 }
 

@@ -44,7 +44,7 @@ export default function DataQualityPage() {
     setCurrentPage(1);
   }, [severityFilter, itemsPerPage]);
 
-  const handleIssueClick = (issue: any) => {
+  const handleIssueClick = (issue: Record<string, unknown>) => {
     // Navigate to advocate page if account_id is available
     if (issue.account_id) {
       router.push(`/advocates/${issue.account_id}`);

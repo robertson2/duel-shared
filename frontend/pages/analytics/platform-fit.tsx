@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import useSWR from 'swr';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardHeader } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { Scan, TrendingUp, Users, DollarSign, Info, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X, ArrowUpDown, Filter, Download } from 'lucide-react';
 import { apiClient } from '@/lib/api';

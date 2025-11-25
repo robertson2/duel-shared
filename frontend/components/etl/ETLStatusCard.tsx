@@ -47,14 +47,14 @@ export function ETLStatusCard({ onETLTriggered }: ETLStatusCardProps) {
   const [triggerResult, setTriggerResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Fetch ETL schedule
-  const { data: schedule, error: scheduleError } = useSWR<ETLSchedule>(
+  const { data: schedule } = useSWR<ETLSchedule>(
     `${API_BASE_URL}/api/v1/etl/schedule`,
     fetcher,
     { refreshInterval: 60000 } // Refresh every minute
   );
 
   // Fetch ETL status
-  const { data: status, error: statusError, mutate: mutateStatus } = useSWR<ETLStatus>(
+  const { data: status, mutate: mutateStatus } = useSWR<ETLStatus>(
     `${API_BASE_URL}/api/v1/etl/status`,
     fetcher,
     { 

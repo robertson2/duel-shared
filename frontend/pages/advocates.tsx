@@ -7,7 +7,6 @@ import { Card, CardHeader } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { Search, Filter, Download, ChevronLeft, ChevronRight, Users, ChevronDown, ChevronUp, X, ArrowUpDown } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import Link from 'next/link';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { TierType } from '@/components/ui/PerformanceBadge';
 

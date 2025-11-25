@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { apiClient, parseSales, ActivitySegment } from '@/lib/api';
-import { Card, CardHeader } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { PerformanceBadge, TierType } from '@/components/ui/PerformanceBadge';
@@ -15,7 +15,7 @@ type ViewMode = 'tiers' | 'activity' | 'efficiency';
 
 export default function SegmentsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('tiers');
-  const { settings, isLoaded } = useSegmentSettings();
+  const { settings } = useSegmentSettings();
   const { formatCurrency } = useCurrency();
   
   // Activity segments filters and pagination
@@ -77,40 +77,8 @@ export default function SegmentsPage() {
     { refreshInterval: 30000 }
   );
 
-  // Fetch top accounts for tier distribution display
-  const { data: advocates, error: advocatesError } = useSWR(
-    'segments-advocates',
-    () => apiClient.getTopAccounts('engagement', 100),
-    { refreshInterval: 30000 }
-  );
+  const error = tiersError || activityError || efficiencyError;
 
-  const error = tiersError || activityError || efficiencyError || advocatesError;
-
-  const getAdvocateTier = (engagement: number, sales: number | string | null): TierType => {
-    const salesNum = parseSales(sales);
-    if (engagement >= 50000 && salesNum >= 5000) return 'platinum';
-    if (engagement >= 20000 && salesNum >= 2000) return 'gold';
-    if (engagement >= 5000 && salesNum >= 500) return 'silver';
-    if (engagement >= 1000 || salesNum >= 100) return 'bronze';
-    return 'starter';
-  };
-
-  const getActivityLevel = (programs: number) => {
-    if (programs >= 10) return 'Highly Active';
-    if (programs >= 5) return 'Active';
-    if (programs >= 2) return 'Moderate';
-    if (programs >= 1) return 'Low';
-    return 'Inactive';
-  };
-
-  const tierCounts = advocates?.reduce((acc, adv) => {
-    const tier = getAdvocateTier(
-      adv.total_engagement_score || 0,
-      adv.total_sales || 0
-    );
-    acc[tier] = (acc[tier] || 0) + 1;
-    return acc;
-  }, {} as Record<TierType, number>);
 
   // Filter and paginate activity segments
   const filteredActivitySegments = useMemo(() => {
@@ -219,7 +187,7 @@ export default function SegmentsPage() {
   };
 
   // Helper function to download CSV
-  const downloadCSV = (headers: string[], rows: any[][], filename: string) => {
+  const downloadCSV = (headers: string[], rows: (string | number)[][], filename: string) => {
     const csvContent = [
       headers.join(','),
       ...rows.map(row => 

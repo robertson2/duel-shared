@@ -12,9 +12,7 @@ import { InsightCard } from '@/components/ui/InsightCard';
 import {
   Users,
   TrendingUp,
-  DollarSign,
   Target,
-  BarChart3,
   AlertCircle,
   Trophy,
   Zap,
@@ -25,7 +23,6 @@ import { MetricsExplainer } from '@/components/ui/MetricsExplainer';
 import Link from 'next/link';
 import { useCurrency } from '@/contexts/CurrencyContext';
 
-const fetcher = (fn: () => Promise<any>) => fn();
 
 // Currency icon component that displays £ or $ based on currency
 const CurrencyIcon: React.FC<{ className?: string }> = ({ className }) => {
@@ -279,7 +276,7 @@ export default function Dashboard() {
           {/* Leaderboard */}
           <div className="mb-8">
             {topAccounts ? (
-              <LeaderboardTable data={topAccounts as any} metric="engagement" />
+              <LeaderboardTable data={topAccounts} metric="engagement" />
             ) : (
               <LoadingCard />
             )}

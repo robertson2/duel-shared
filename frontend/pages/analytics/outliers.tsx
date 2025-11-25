@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { Card, CardHeader } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { AlertTriangle, TrendingUp, TrendingDown, Zap, AlertCircle, Info, Settings, Search, Filter, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { apiClient, parseSales } from '@/lib/api';
@@ -28,7 +28,6 @@ export default function OutliersPage() {
   // Advanced filters visibility
   const [showSalesFilters, setShowSalesFilters] = useState(false);
   const [showEngagementFilters, setShowEngagementFilters] = useState(false);
-  const [showEfficientFilters, setShowEfficientFilters] = useState(false);
 
   // Filter state for each tab
   const [salesFilters, setSalesFilters] = useState({
@@ -180,7 +179,6 @@ export default function OutliersPage() {
   // Check if filters are active
   const salesHasActiveFilters = salesFilters.search || salesFilters.type || salesFilters.brand;
   const engagementHasActiveFilters = engagementFilters.search || engagementFilters.category || engagementFilters.platform || engagementFilters.brand;
-  const efficientHasActiveFilters = efficientFilters.search;
 
   // Reset pagination when filters change
   React.useEffect(() => {
@@ -203,7 +201,7 @@ export default function OutliersPage() {
   }, [outlierType]);
 
   const getOutlierBadge = (type: string) => {
-    const badges: Record<string, { color: string; icon: any }> = {
+    const badges: Record<string, { color: string; icon: React.ElementType }> = {
       'High Outlier': { color: 'bg-red-100 text-red-800', icon: TrendingUp },
       'Low Outlier': { color: 'bg-orange-100 text-orange-800', icon: TrendingDown },
       'Viral': { color: 'bg-purple-100 text-purple-800', icon: Zap },
@@ -286,7 +284,7 @@ export default function OutliersPage() {
   };
 
   // Helper function to download CSV
-  const downloadCSV = (headers: string[], rows: any[][], filename: string) => {
+  const downloadCSV = (headers: string[], rows: (string | number)[][], filename: string) => {
     const csvContent = [
       headers.join(','),
       ...rows.map(row => 
@@ -473,7 +471,7 @@ export default function OutliersPage() {
               <div className="ml-8">
                 <div>
                   <p className="text-sm text-green-800 mb-2">
-                    This analysis identifies accounts with the <strong>"Quality over Quantity"</strong> pattern - 
+                    This analysis identifies accounts with the <strong>&quot;Quality over Quantity&quot;</strong> pattern - 
                     they generate high sales despite lower engagement.
                   </p>
                   <ul className="text-sm text-green-800 space-y-1 ml-4">

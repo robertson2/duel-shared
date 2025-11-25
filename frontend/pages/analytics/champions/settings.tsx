@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { Settings, Save, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
+import { Save, RotateCcw, AlertCircle, CheckCircle } from 'lucide-react';
 import {
   ChampionSettings,
   loadSettings,
@@ -15,8 +14,6 @@ import {
 } from '@/lib/championSettings';
 
 export default function ChampionSettingsPage() {
-  const router = useRouter();
-  const { section } = router.query; // Allow deep linking to specific section
 
   const [settings, setSettings] = useState<ChampionSettings>(DEFAULT_CHAMPION_SETTINGS);
   const [errors, setErrors] = useState<string[]>([]);

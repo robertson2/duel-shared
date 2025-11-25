@@ -262,7 +262,7 @@ export const apiClient = {
     startDate?: string,
     endDate?: string
   ) => {
-    const params: any = { limit, offset };
+    const params: Record<string, string | number> = { limit, offset };
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
     const response = await api.get(`/api/v1/accounts/${accountId}/sales`, { params });
@@ -277,7 +277,7 @@ export const apiClient = {
     endDate?: string,
     platform?: string
   ) => {
-    const params: any = { limit, offset };
+    const params: Record<string, string | number> = { limit, offset };
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
     if (platform) params.platform = platform;
@@ -298,14 +298,14 @@ export const apiClient = {
     offset = 0,
     search?: string
   ): Promise<AccountEngagement[]> => {
-    const params: any = { metric, limit, offset };
+    const params: Record<string, string | number> = { metric, limit, offset };
     if (search) params.search = search;
     const response = await api.get('/api/v1/analytics/top-accounts', { params });
     return response.data;
   },
 
   getTopAccountsCount: async (search?: string): Promise<{ total: number }> => {
-    const params: any = {};
+    const params: Record<string, string> = {};
     if (search) params.search = search;
     const response = await api.get('/api/v1/analytics/top-accounts/count', { params });
     return response.data;
@@ -325,9 +325,9 @@ export const apiClient = {
   getChampions: async (
     championType: 'overall' | 'sales' | 'engagement' | 'balanced' = 'overall',
     limit = 50,
-    settings?: Record<string, any>
+    settings?: Record<string, number>
   ): Promise<AccountEngagement[]> => {
-    const params: Record<string, any> = { 
+    const params: Record<string, string | number> = { 
       champion_type: championType, 
       limit 
     };
@@ -372,7 +372,7 @@ export const apiClient = {
     severity?: string,
     resolved?: boolean
   ): Promise<DataQualityIssue[]> => {
-    const params: any = {};
+    const params: Record<string, string | boolean> = {};
     if (severity) params.severity = severity;
     if (resolved !== undefined) params.resolved = resolved;
     const response = await api.get(`/api/v1/data-quality/issues/by-account/${accountId}`, { params });
@@ -439,7 +439,7 @@ export const apiClient = {
     activityLevel?: string,
     valueLevel?: string
   ): Promise<ActivitySegment[]> => {
-    const params: Record<string, any> = { limit, offset };
+    const params: Record<string, string | number> = { limit, offset };
     if (activityLevel) params.activity_level = activityLevel;
     if (valueLevel) params.value_level = valueLevel;
     const response = await api.get('/api/v1/analytics/segments/activity-based', { params });
@@ -450,7 +450,7 @@ export const apiClient = {
     activityLevel?: string,
     valueLevel?: string
   ): Promise<{ total: number }> => {
-    const params: Record<string, any> = {};
+    const params: Record<string, string> = {};
     if (activityLevel) params.activity_level = activityLevel;
     if (valueLevel) params.value_level = valueLevel;
     const response = await api.get('/api/v1/analytics/segments/activity-based/count', { params });

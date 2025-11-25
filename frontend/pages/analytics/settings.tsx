@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { Settings, Save, RotateCcw, AlertCircle, CheckCircle, Trophy, TrendingUp, UsersRound } from 'lucide-react';
+import { Save, RotateCcw, AlertCircle, CheckCircle, Trophy, TrendingUp, UsersRound } from 'lucide-react';
 import {
   ChampionSettings,
   loadSettings as loadChampionSettings,

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Head from 'next/head';
 import useSWR from 'swr';
-import { apiClient, BrandPerformance } from '@/lib/api';
+import { apiClient } from '@/lib/api';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -44,7 +44,7 @@ export default function BrandsPage() {
   const filteredAndSortedBrands = useMemo(() => {
     if (!brands) return [];
 
-    let filtered = brands.filter((brand) => {
+    const filtered = brands.filter((brand) => {
       // Search filter
       const matchesSearch = brand.brand.toLowerCase().includes(searchTerm.toLowerCase());
       

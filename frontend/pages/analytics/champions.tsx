@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import useSWR from 'swr';
 import { apiClient, parseSales } from '@/lib/api';
-import { Card, CardHeader } from '@/components/ui/Card';
+import { Card } from '@/components/ui/Card';
 import { Loading } from '@/components/ui/Loading';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Trophy, DollarSign, TrendingUp, Target, Settings } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function ChampionsPage() {
 
   // Build settings params based on champion type
   const getSettingsParams = () => {
-    const params: Record<string, any> = {};
+    const params: Record<string, number> = {};
     
     if (championType === 'overall') {
       params.engagement_weight = settings.overall.engagementWeight;

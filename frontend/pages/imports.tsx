@@ -207,7 +207,7 @@ export default function ImportsPage() {
                     Upload the relevant data files using the upload section below.
                   </li>
                   <li className="pl-2">
-                    Once files have been uploaded, you can either wait for the next ETL run (details are in the countdown below), or trigger the run manually using the "Trigger ETL Now" button.
+                    Once files have been uploaded, you can either wait for the next ETL run (details are in the countdown below), or trigger the run manually using the &quot;Trigger ETL Now&quot; button.
                   </li>
                   <li className="pl-2">
                     Once triggered, you can see details of the run in the history log table or by opening the{' '}
