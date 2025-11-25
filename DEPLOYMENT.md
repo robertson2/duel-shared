@@ -211,10 +211,26 @@ Host your own Prefect server on Railway (more complex, but gives you full contro
 PORT=4200
 PREFECT_SERVER_API_HOST=0.0.0.0
 PREFECT_SERVER_API_PORT=$PORT
-PREFECT_API_DATABASE_CONNECTION_URL=${{Postgres.DATABASE_URL}}
+PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://${{Postgres.PGUSER}}:${{Postgres.PGPASSWORD}}@${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}
+PREFECT_UI_API_URL=https://your-prefect-service.up.railway.app/api
 ```
 
-#### Step 3: Update Backend Service Variables
+**Important Notes**:
+- Use `postgresql+asyncpg://` (not `postgresql://`) to ensure Prefect uses the async driver
+- Replace `your-prefect-service.up.railway.app` with your actual Railway Prefect service domain (found in Settings → Networking)
+- Do NOT set `PORT` - Railway provides this automatically
+- `PREFECT_UI_API_URL` tells the dashboard where to find the API from your browser
+
+#### Step 3: Access the Prefect Dashboard
+
+Once deployed, access your Prefect dashboard at:
+```
+https://your-prefect-service.up.railway.app
+```
+
+You should see the Prefect UI with no flows yet.
+
+#### Step 4: Update Backend Service Variables
 
 In your main backend service:
 
@@ -224,7 +240,7 @@ PREFECT_DASHBOARD_URL=https://your-prefect-service.up.railway.app
 PREFECT_ONLY_HISTORY=true
 ```
 
-#### Step 4: Deploy Flows
+#### Step 5: Deploy Flows
 
 From your local machine, set the Prefect API URL:
 
