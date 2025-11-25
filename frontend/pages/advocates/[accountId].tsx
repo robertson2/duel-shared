@@ -156,8 +156,8 @@ export default function AdvocateDetailPage() {
     const rows = programs.map((program: Record<string, unknown>) => [
       program.brand || '',
       program.program_name || '',
-      program.started_at ? new Date(program.started_at).toLocaleDateString() : '',
-      program.completed_at ? new Date(program.completed_at).toLocaleDateString() : '',
+      program.started_at ? new Date(program.started_at as string).toLocaleDateString() : '',
+      program.completed_at ? new Date(program.completed_at as string).toLocaleDateString() : '',
       program.tasks || 0,
       program.total_engagement || 0,
       parseSales(program.total_sales)
@@ -174,7 +174,7 @@ export default function AdvocateDetailPage() {
 
     const headers = ['Date', 'Brand', 'Campaign', 'Amount', 'Order ID', 'User'];
     const rows = sales.map((sale: Record<string, unknown>) => [
-      new Date(sale.attributed_at).toLocaleDateString(),
+      new Date(sale.attributed_at as string).toLocaleDateString(),
       sale.brand || '',
       sale.program_name || '',
       parseSales(sale.amount),
@@ -193,7 +193,7 @@ export default function AdvocateDetailPage() {
 
     const headers = ['Date', 'Platform', 'Brand', 'Likes', 'Comments', 'Shares', 'Reach', 'Engagement Score'];
     const rows = socialAnalytics.map((analytics: Record<string, unknown>) => [
-      new Date(analytics.measured_at).toLocaleDateString(),
+      new Date(analytics.measured_at as string).toLocaleDateString(),
       analytics.platform || '',
       analytics.brand || '',
       analytics.likes || 0,
@@ -217,7 +217,7 @@ export default function AdvocateDetailPage() {
       issue.severity || '',
       issue.issue_type || '',
       issue.issue_description || '',
-      new Date(issue.detected_at).toLocaleDateString(),
+      new Date(issue.detected_at as string).toLocaleDateString(),
       issue.resolved ? 'Resolved' : 'Open'
     ]);
 
