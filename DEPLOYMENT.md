@@ -54,10 +54,14 @@ DATA_DIR=/app/data
 DATA_ARCHIVE_DIR=/app/data/archive
 ```
 
-**Prefect (Optional):**
+**Prefect (Optional - see Part 3 for full setup):**
 ```
-PREFECT_API_URL=http://localhost:4200/api
-PREFECT_DASHBOARD_URL=http://localhost:4200
+PREFECT_API_URL=https://api.prefect.cloud/api/accounts/[ACCOUNT_ID]/workspaces/[WORKSPACE_ID]
+PREFECT_ONLY_HISTORY=true
+```
+
+Or if running without Prefect:
+```
 PREFECT_ONLY_HISTORY=false
 ```
 
@@ -139,7 +143,128 @@ You can add multiple origins separated by commas.
 2. Vercel will build and deploy your frontend
 3. Once complete, you'll get a URL like `https://your-app.vercel.app`
 
-## Part 3: Post-Deployment Setup
+## Part 3: Deploy Prefect for ETL Orchestration (Optional)
+
+Prefect is used for scheduling and monitoring ETL pipeline runs. This section is **optional** - the backend will work without Prefect, but you'll lose scheduled ETL runs and workflow monitoring.
+
+### Option 1: Prefect Cloud (Recommended for Production)
+
+Prefect Cloud is a managed service - easiest to set up and maintain.
+
+#### Step 1: Create Prefect Cloud Account
+
+1. Go to [app.prefect.cloud](https://app.prefect.cloud) and sign up
+2. Create a new workspace
+3. Generate an API key:
+   - Go to your profile → API Keys
+   - Click "Create API Key"
+   - Copy the key (you'll need it later)
+
+#### Step 2: Deploy Flow to Prefect Cloud
+
+From your local machine:
+
+```bash
+# Install Prefect
+pip install prefect
+
+# Authenticate with Prefect Cloud
+prefect cloud login
+
+# Enter your API key when prompted
+
+# Deploy the flow
+cd your-project-directory
+python -m backend.orchestration.deploy_flows
+```
+
+#### Step 3: Update Railway Environment Variables
+
+In your Railway backend service, add/update:
+
+```
+PREFECT_API_URL=https://api.prefect.cloud/api/accounts/[ACCOUNT_ID]/workspaces/[WORKSPACE_ID]
+PREFECT_ONLY_HISTORY=true
+```
+
+Find your account/workspace IDs in Prefect Cloud → Settings.
+
+#### Step 4: Test the Integration
+
+1. Trigger a manual ETL run from your frontend (Imports page)
+2. View the run in Prefect Cloud dashboard
+3. Check Railway logs to verify the flow executed
+
+### Option 2: Self-Hosted Prefect Server on Railway
+
+Host your own Prefect server on Railway (more complex, but gives you full control).
+
+#### Step 1: Create a New Service for Prefect
+
+1. In Railway, add a new service to your project
+2. Deploy from the same GitHub repo
+3. Set the start command to: `prefect server start --host 0.0.0.0 --port $PORT`
+
+#### Step 2: Set Environment Variables for Prefect Service
+
+```
+PORT=4200
+PREFECT_SERVER_API_HOST=0.0.0.0
+PREFECT_SERVER_API_PORT=$PORT
+PREFECT_API_DATABASE_CONNECTION_URL=${{Postgres.DATABASE_URL}}
+```
+
+#### Step 3: Update Backend Service Variables
+
+In your main backend service:
+
+```
+PREFECT_API_URL=https://your-prefect-service.up.railway.app/api
+PREFECT_DASHBOARD_URL=https://your-prefect-service.up.railway.app
+PREFECT_ONLY_HISTORY=true
+```
+
+#### Step 4: Deploy Flows
+
+From your local machine, set the Prefect API URL:
+
+```bash
+export PREFECT_API_URL=https://your-prefect-service.up.railway.app/api
+python -m backend.orchestration.deploy_flows
+```
+
+### Option 3: Run Without Prefect
+
+If you don't need scheduled ETL or workflow monitoring:
+
+#### In Railway Backend Variables:
+
+```
+PREFECT_ONLY_HISTORY=false
+```
+
+This will:
+- Disable Prefect integration
+- Allow manual ETL triggers from the frontend
+- Store ETL history in the database instead of Prefect
+
+### Prefect Configuration Summary
+
+| Option | Pros | Cons | Cost |
+|--------|------|------|------|
+| **Prefect Cloud** | Easy setup, managed, reliable | Requires internet connection | Free tier available |
+| **Self-Hosted** | Full control, data privacy | Complex setup, maintenance | Railway hosting costs |
+| **No Prefect** | Simple, no extra services | No scheduling, basic monitoring | Free |
+
+### Testing Prefect Integration
+
+1. Go to your frontend Imports page
+2. Click "Trigger ETL Now"
+3. Check the ETL status updates
+4. If using Prefect: View the run in Prefect dashboard
+5. Check Railway logs for execution details
+
+## Part 4: Post-Deployment Setup
 
 ### 1. Update CORS Origins
 
@@ -253,13 +378,15 @@ Both Railway and Vercel support automatic deployments:
 
 ## Next Steps
 
-1. Set up monitoring and alerting
-2. Configure custom domains
-3. Set up CI/CD pipelines (if not using auto-deploy)
-4. Implement authentication/authorization
-5. Set up database backups
-6. Configure rate limiting
-7. Add error tracking (Sentry, etc.)
+1. Set up Prefect for ETL orchestration (see Part 3)
+2. Configure scheduled ETL runs (hourly, daily, etc.)
+3. Set up monitoring and alerting
+4. Configure custom domains
+5. Set up CI/CD pipelines (if not using auto-deploy)
+6. Implement authentication/authorization
+7. Set up database backups
+8. Configure rate limiting
+9. Add error tracking (Sentry, etc.)
 
 ## Support
 

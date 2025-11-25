@@ -21,12 +21,18 @@
 
 **Get your frontend URL:** `https://your-app.vercel.app`
 
-## Final Step
+## Final Steps
 
-Update Railway backend `CORS_ORIGINS` to include your Vercel URL:
+1. Update Railway backend `CORS_ORIGINS` to include your Vercel URL:
 ```
 CORS_ORIGINS=https://your-app.vercel.app
 ```
+
+2. **(Optional)** Set up Prefect for ETL scheduling:
+   - Sign up at [app.prefect.cloud](https://app.prefect.cloud)
+   - Add `PREFECT_API_URL` to Railway
+   - Deploy flows: `python -m backend.orchestration.deploy_flows`
+   - See [DEPLOYMENT.md Part 3](./DEPLOYMENT.md#part-3-deploy-prefect-for-etl-orchestration-optional) for details
 
 ## That's it! 🎉
 
